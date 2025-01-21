@@ -1,0 +1,7 @@
+.venv
+instance
+__pycache__
+.pytest_cache
+.mypy_cache
+coverage_html_report
+htmlcov
