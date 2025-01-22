@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from src.modules.events.dao.event import EventDaoInterface
+from src.modules.events.dtos.event import EventDTOWithAmount
 from src.modules.events.entities.event import EventEntity
 
 
@@ -11,7 +12,7 @@ class EventRepositoryInterface(ABC):
         """Create a new event"""
 
     @abstractmethod
-    def get_event_by_id(self, event_id: str) -> EventEntity | None:
+    def get_event_by_id(self, event_id: str) -> EventDTOWithAmount | None:
         """Retrieve a event information with the given id"""
 
     @abstractmethod
@@ -25,6 +26,10 @@ class EventRepositoryInterface(ABC):
     @abstractmethod
     def check_participant_existence(self, attendee_email: str, event_id: str) -> bool:
         """Check if the participant is registered in the event"""
+
+    @abstractmethod
+    def load_events_list(self, offset: int, query: str) -> list[EventEntity]:
+        """Retrieve all events available"""
 
 
 class EventRepository(EventRepositoryInterface):
@@ -47,3 +52,6 @@ class EventRepository(EventRepositoryInterface):
         return self.__event_dao.check_attendee_in_event(
             attendee_email=attendee_email, event_id=event_id
         )
+
+    def load_events_list(self, offset, query):
+        return self.__event_dao.retrieve_events(offset=offset, query=query)

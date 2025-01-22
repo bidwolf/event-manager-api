@@ -47,6 +47,14 @@ def test_event_get_by_id(dao):
     assert created == result
 
 
+def test_event_get_list(dao):
+    dao.retrieve_events.return_value = result
+    repository = EventRepository(dao=dao)
+    created = repository.load_events_list(offset=1, query="test")
+    dao.retrieve_events.assert_called_with(offset=1, query="test")
+    assert created == result
+
+
 def test_event_check_existence(dao):
     dao.check_event_exists.return_value = True
     repository = EventRepository(dao=dao)
