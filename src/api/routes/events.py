@@ -27,11 +27,10 @@ def create_event_route():
 @event_blueprint.route("/events", methods=[HTTPMethod.GET])
 def get_event_routes():
     try:
-        print(request.args.get("offset"))
         data_request = HttpRequest(
             body=None,
             params={
-                "page_offset": request.args.get("offset", "0", type=str),
+                "page_offset": request.args.get("page_offset", "0", type=str),
                 "query": request.args.get("query", "", type=str),
             },
         )

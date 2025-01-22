@@ -27,7 +27,14 @@ def create_attendee(event_id):
 @attendee_blueprint.route("/events/<event_id>/attendees", methods=[HTTPMethod.GET])
 def get_participants(event_id):
     try:
-        data_request = HttpRequest(body=None, params={"event_id": event_id})
+        data_request = HttpRequest(
+            body=None,
+            params={
+                "event_id": event_id,
+                "page_offset": request.args.get("page_offset", "0", type=str),
+                "query": request.args.get("query", "", type=str),
+            },
+        )
         response = attendee_controller.get_event_participants(request=data_request)
         return (jsonify(response.payload), response.status)
 
