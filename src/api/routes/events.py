@@ -24,6 +24,28 @@ def create_event_route():
         return (jsonify(response.payload), response.status)
 
 
+@event_blueprint.route("/events", methods=[HTTPMethod.GET])
+def get_event_routes():
+    try:
+        print(request.args.get("offset"))
+        data_request = HttpRequest(
+            body=None,
+            params={
+                "page_offset": request.args.get("offset", "0", type=str),
+                "query": request.args.get("query", "", type=str),
+            },
+        )
+        print(data_request.params)
+        response = event_controller.get_events(request=data_request)
+        return (jsonify(response.payload), response.status)
+
+    except HttpResponseError as exc:
+        response = HttpResponse(
+            payload={"title": exc.title, "details": exc.details}, status=exc.status
+        )
+        return (jsonify(response.payload), response.status)
+
+
 @event_blueprint.route("/events/<event_id>", methods=[HTTPMethod.GET])
 def get_event_route(event_id):
     try:
