@@ -4,17 +4,18 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import Row, text
 
 from src.drivers.database.types import ConnectionInterface
+from src.modules.events.dtos.event import EventDTOWithAmount
 from src.modules.events.entities.event import EventEntity
 from src.modules.events.exc.event import EventAlreadyExistsError
 
 
 class EventDaoInterface(ABC):
     @abstractmethod
-    def get_event_info(self, event_id: str) -> EventEntity | None:
+    def get_event_info(self, event_id: str) -> EventDTOWithAmount | None:
         """Retrieves data about an event without participants"""
 
     @abstractmethod
-    def get_all_events(self) -> list[EventEntity]:
+    def retrieve_events(self, offset: int, query: str) -> list[EventEntity]:
         """Retrieves all valid Events from the database"""
 
     @abstractmethod
@@ -47,10 +48,9 @@ class EventDAO(EventDaoInterface):
             slug=row[3],
             maximum_attendees=row[4],
             created_at=row[5],
-            attendees_amount=row[6],
         )
 
-    def get_event_info(self, event_id) -> EventEntity | None:
+    def get_event_info(self, event_id) -> EventDTOWithAmount | None:
         engine = self.__connection.get_engine()
         with engine.connect() as connection:
             result = connection.execute(
@@ -62,7 +62,7 @@ class EventDAO(EventDaoInterface):
                     FROM attendees AS at
                     LEFT JOIN events AS ev
                     ON at.event_id = ev.id
-                    WHERE ev.id = '9c6457ae-27ce-4172-bfcf-a349949b3ac6'
+                    WHERE ev.id = :id
                     GROUP BY ev.id
                      """
                 ),
@@ -71,7 +71,15 @@ class EventDAO(EventDaoInterface):
             row = result.first()
             if row is None:
                 return None
-            return self.__row_to_event_entity(row=row)
+            return EventDTOWithAmount(
+                event_id=row[0],
+                title=row[1],
+                details=row[2],
+                slug=row[3],
+                maximum_attendees=row[4],
+                created_at=row[5],
+                attendee_amount=row[6],
+            )
 
     def create_event(self, event_data) -> EventEntity | None:
         engine = self.__connection.get_engine()
@@ -100,14 +108,25 @@ class EventDAO(EventDaoInterface):
                     "An event with this slug already exists."
                 ) from exc
 
-    def get_all_events(self) -> list[EventEntity]:
+    def retrieve_events(self, offset: int = 0, query: str = "") -> list[EventEntity]:
         engine = self.__connection.get_engine()
         with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM events"))
+            result = connection.execute(
+                text(
+                    """
+                    SELECT * FROM events
+                    WHERE events.title LIKE :query
+                    ORDER BY events.created_at DESC
+                    LIMIT 10
+                    OFFSET 10 * :offset
+                    """
+                ),
+                {"offset": offset, "query": f"%{query}%"},
+            )
             rows = result.fetchall()
             if len(rows) == 0:
                 return []
-            events = [self.__row_to_event_entity(row=raw) for raw in rows]
+            events = [self.__row_to_event_entity(row=event_row) for event_row in rows]
             return events
 
     def check_event_has_vacancies(self, event_id=str):

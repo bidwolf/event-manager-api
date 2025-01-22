@@ -22,7 +22,6 @@ class EventAttributes(TypedDict):
     details: str | None
     maximum_attendees: int | None
     created_at: datetime | None
-    attendees_amount: int | None
 
 
 class EventEntity:
@@ -35,4 +34,3 @@ class EventEntity:
         self.details = event["details"]
         self.maximum_attendees = event["maximum_attendees"]
         self.created_at = event.get("created_at") or datetime.now()
-        self.attendees_amount = event.get("attendees_amount", 0)

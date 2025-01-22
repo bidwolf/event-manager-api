@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 from src.drivers.database.types import ConnectionInterface
 from src.modules.events.dao.event import EventDAO
+from src.modules.events.dtos.event import EventDTOWithAmount
 from src.modules.events.entities.event import EventEntity
 
 
@@ -47,8 +48,8 @@ class TestEventInfo:
             self.connection.get_engine.return_value.connect.assert_called_once()
             db_connection.execute.return_value.first.assert_called_once()
             db_connection.execute.assert_called_once_with(self.query, {"id": event_id})
-            assert isinstance(result, EventEntity)
-            assert result.id == row[0]
+            assert isinstance(result, EventDTOWithAmount)
+            assert result.event_id == row[0]
             assert result.title == row[1]
             assert result.details == row[2]
             assert result.slug == row[3]
@@ -57,9 +58,18 @@ class TestEventInfo:
 
     def test_event_info_list(self):
         with patch("src.modules.events.dao.event.text") as text:
-            self.query = text("SELECT * FROM events")
+            self.query = raw_query = text(
+                """
+                    SELECT * FROM events
+                    WHERE events.title LIKE :query
+                    ORDER BY events.created_at DESC
+                    LIMIT 10
+                    OFFSET 10 * :offset
+                    """
+            )
             dao = EventDAO(connection=self.connection)
-            event_id = "23"
+            query = "test"
+            offset = 1
             db_connection = (
                 self.connection.get_engine.return_value.connect.return_value.__enter__.return_value
             )
@@ -75,10 +85,11 @@ class TestEventInfo:
                 )
             ]
             db_connection.execute.return_value.fetchall.return_value = rows
-            result = dao.get_all_events()
+            result = dao.retrieve_events(offset=offset, query=query)
             db_connection.execute.return_value.fetchall.assert_called_once()
             db_connection.execute.assert_called_once_with(
                 self.query,
+                {"offset": offset, "query": f"%{query}%"},
             )
             assert result[0].id == rows[0][0]
             assert result[0].title == rows[0][1]
@@ -89,14 +100,28 @@ class TestEventInfo:
 
     def test_event_info_list_empty(self):
         with patch("src.modules.events.dao.event.text") as text:
-            query = text("SELECT * FROM events")
+            raw_query = text(
+                """
+                    SELECT * FROM events
+                    WHERE events.title LIKE :query
+                    ORDER BY events.created_at DESC
+                    LIMIT 10
+                    OFFSET 10 * :offset
+                    """
+            )
+
             dao = EventDAO(connection=self.connection)
             db_connection = (
                 self.connection.get_engine.return_value.connect.return_value.__enter__.return_value
             )
             rows = []
+            query = ""
+            offset = 0
             db_connection.execute.return_value.fetchall.return_value = rows
-            result = dao.get_all_events()
+            result = dao.retrieve_events()
             db_connection.execute.return_value.fetchall.assert_called_once()
-            db_connection.execute.assert_called_once_with(query)
+            db_connection.execute.assert_called_once_with(
+                raw_query,
+                {"offset": offset, "query": f"%{query}%"},
+            )
             assert len(result) == 0
