@@ -159,11 +159,15 @@ class TestAttendeeController:
 
     def test_get_event_empty_participants_list(self):
         controller = AttendeeController(service=self.service)
-        request = HttpRequest(body=None, params={"event_id": "267"})
+        request = HttpRequest(
+            body=None, params={"event_id": "267", "offset": 0, "query": ""}
+        )
         self.service.get_event_attendees.return_value = None
         response = controller.get_event_participants(request=request)
         self.service.get_event_attendees.assert_called_with(
-            event_id=request.params["event_id"]
+            event_id=request.params["event_id"],
+            offset=request.params["offset"],
+            query=request.params["query"],
         )
         assert response.payload["attendees"] == []
         assert response.payload["total"] == 0
@@ -185,7 +189,9 @@ class TestAttendeeController:
         self.service.get_event_attendees.return_value = attendees
         response = controller.get_event_participants(request=request)
         self.service.get_event_attendees.assert_called_with(
-            event_id=request.params["event_id"]
+            event_id=request.params["event_id"],
+            offset=0,
+            query="",
         )
         assert response.payload["attendees"] == attendees
         assert response.payload["total"] > 0

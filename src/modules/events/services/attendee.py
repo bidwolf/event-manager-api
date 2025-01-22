@@ -21,7 +21,9 @@ class AttendeeServiceInterface(ABC):
         """Verifies the event and register the attendee in that event"""
 
     @abstractmethod
-    def get_event_attendees(self, event_id: str) -> list[AttendeeDTO] | None:
+    def get_event_attendees(
+        self, event_id: str, query: str, offset: int
+    ) -> list[AttendeeDTO] | None:
         """Retrieve the attendee list registered in the given event id"""
 
     @abstractmethod
@@ -98,12 +100,12 @@ class AttendeeService(AttendeeServiceInterface):
             checked_in_at=attendee.checked_in_at,
         )
 
-    def get_event_attendees(self, event_id):
+    def get_event_attendees(self, event_id, query, offset):
         event_exists = self.__event_service.check_event_existence(event_id=event_id)
         if not event_exists:
             raise EventNotFoundError("The given event not exists.")
         entity_participants = self.__repository.get_event_participants(
-            event_id=event_id
+            event_id=event_id, offset=offset, query=query
         )
         dto_participants = [
             self.__convert_entity_to_dto(attendee=attendee)

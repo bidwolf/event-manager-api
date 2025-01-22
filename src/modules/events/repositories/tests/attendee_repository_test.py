@@ -42,10 +42,15 @@ def test_create_attendee_repository(dao: MagicMock):
 
 def test_get_event_participants_repository(dao: MagicMock):
     repository = AttendeeRepository(dao=dao)
-
+    offset = 0
+    query = ""
     dao.get_event_participants.return_value = result
-    created = repository.get_event_participants(event_id=input_data.event_id)
-    dao.get_event_participants.assert_called_once_with(event_id=input_data.event_id)
+    created = repository.get_event_participants(
+        event_id=input_data.event_id, query=query, offset=offset
+    )
+    dao.get_event_participants.assert_called_once_with(
+        event_id=input_data.event_id, query=query, offset=offset
+    )
     assert created == result
 
 

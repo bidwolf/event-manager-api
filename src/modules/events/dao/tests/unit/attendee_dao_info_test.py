@@ -102,7 +102,8 @@ class TestAttendeeInfo:
                 ON at.event_id=ev.id
                 LEFT JOIN check_ins AS chk
                 ON chk.attendee_id = at.id
-                WHERE ev.id = :id
+                WHERE ev.id = :id AND at.name LIKE :query
+                LIMIT 10 * :offset
                 ORDER BY at.name DESC;
             """
             )
@@ -121,9 +122,15 @@ class TestAttendeeInfo:
                 )
             ]
             db_connection.execute.return_value.fetchall.return_value = rows
-            result = dao.get_event_participants(event_id="1")
+            query = "test"
+            offset = 1
+            result = dao.get_event_participants(
+                event_id="1", offset=offset, query=query
+            )
             db_connection.execute.return_value.fetchall.assert_called_once()
-            db_connection.execute.assert_called_once_with(self.query, {"id": "1"})
+            db_connection.execute.assert_called_once_with(
+                self.query, {"id": "1", "offset": offset, "query": f"%{query}%"}
+            )
             assert result[0].id == rows[0][0]
             assert result[0].name == rows[0][1]
             assert result[0].email == rows[0][2]
@@ -147,7 +154,8 @@ class TestAttendeeInfo:
                 ON at.event_id=ev.id
                 LEFT JOIN check_ins AS chk
                 ON chk.attendee_id = at.id
-                WHERE ev.id = :id
+                WHERE ev.id = :id AND at.name LIKE :query
+                LIMIT 10 * :offset
                 ORDER BY at.name DESC;
             """
             )
@@ -157,7 +165,13 @@ class TestAttendeeInfo:
             )
             rows = []
             db_connection.execute.return_value.fetchall.return_value = rows
-            result = dao.get_event_participants(event_id="1")
+            query = ""
+            offset = 0
+            result = dao.get_event_participants(
+                event_id="1", offset=offset, query=query
+            )
             db_connection.execute.return_value.fetchall.assert_called_once()
-            db_connection.execute.assert_called_once_with(self.query, {"id": "1"})
+            db_connection.execute.assert_called_once_with(
+                self.query, {"id": "1", "offset": offset, "query": f"%{query}%"}
+            )
             assert len(result) == 0

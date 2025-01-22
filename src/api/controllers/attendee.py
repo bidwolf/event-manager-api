@@ -57,8 +57,12 @@ class AttendeeController(AttendeeControllerInterface):
                 and isinstance(request.params["event_id"], str)
             ):
                 raise TypeError("You provided an invalid event id.")
+            query = request.params.get("query", "")
+            offset = 0
+            if str(request.params.get("offset")).isnumeric():
+                offset = int(request.params.get("offset"))
             data = self.__service.get_event_attendees(
-                event_id=request.params["event_id"]
+                event_id=request.params["event_id"], offset=offset, query=query
             )
             result_payload = {
                 "attendees": data or [],

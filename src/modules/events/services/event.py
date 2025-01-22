@@ -13,7 +13,6 @@ from src.modules.events.entities.event import EventEntity
 
 from src.modules.events.exc.event import (
     EventAlreadyExistsError,
-    EventNotFoundError,
     EventNotCreatedError,
 )
 

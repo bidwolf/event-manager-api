@@ -9,7 +9,9 @@ class AttendeeRepositoryInterface(ABC):
         """Create a attendee for the event"""
 
     @abstractmethod
-    def get_event_participants(self, event_id: str) -> list[AttendeeEntity]:
+    def get_event_participants(
+        self, event_id: str, query: str, offset: int
+    ) -> list[AttendeeEntity]:
         """Retrive a list of participants of the given event"""
 
     @abstractmethod
@@ -24,8 +26,10 @@ class AttendeeRepository(AttendeeRepositoryInterface):
     def create(self, data):
         return self.__dao.register_participant(attendee=data)
 
-    def get_event_participants(self, event_id):
-        return self.__dao.get_event_participants(event_id=event_id)
+    def get_event_participants(self, event_id, query, offset):
+        return self.__dao.get_event_participants(
+            event_id=event_id, query=query, offset=offset
+        )
 
     def get_attendee_by_id(self, attendee_id):
         return self.__dao.get_attendee_data(attendee_id=attendee_id)

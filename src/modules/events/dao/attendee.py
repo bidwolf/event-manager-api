@@ -11,7 +11,9 @@ from src.modules.events.exc.attendee import AttendeeAlreadyExistsError
 class AttendeeDaoInterface(ABC):
 
     @abstractmethod
-    def get_event_participants(self, event_id: str) -> list[AttendeeEntity]:
+    def get_event_participants(
+        self, event_id: str, query: str, offset: int
+    ) -> list[AttendeeEntity]:
         """Retrieve registered attendees for the event with the given Id"""
 
     @abstractmethod
@@ -61,7 +63,7 @@ class AttendeeDAO(AttendeeDaoInterface):
                 return None
             return self.__row_to_entity(row=row)
 
-    def get_event_participants(self, event_id):
+    def get_event_participants(self, event_id, query="", offset=0):
         engine = self.__connection.get_engine()
         with engine.connect() as connection:
             get_attendee_data_sql = text(
@@ -78,11 +80,15 @@ class AttendeeDAO(AttendeeDaoInterface):
                 ON at.event_id=ev.id
                 LEFT JOIN check_ins AS chk
                 ON chk.attendee_id = at.id
-                WHERE ev.id = :id
+                WHERE ev.id = :id AND at.name LIKE :query
+                LIMIT 10 * :offset
                 ORDER BY at.name DESC;
             """
             )
-            result = connection.execute(get_attendee_data_sql, {"id": event_id})
+            result = connection.execute(
+                get_attendee_data_sql,
+                {"id": event_id, "query": f"%{query}%", "offset": offset},
+            )
             all_rows = result.fetchall()
             if len(all_rows) == 0:
                 return []

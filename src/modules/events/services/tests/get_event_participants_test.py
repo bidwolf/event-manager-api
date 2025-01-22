@@ -31,9 +31,15 @@ class TestGetEventParticipants:
         service = AttendeeService(
             repository=self.repository, event_service=self.event_service
         )
-        participants = service.get_event_attendees(event_id="1")
+        offset = 1
+        query = ""
+        participants = service.get_event_attendees(
+            event_id="1", query=query, offset=offset
+        )
         self.event_service.check_event_existence.assert_called_once_with(event_id="1")
-        self.repository.get_event_participants.assert_called_once_with(event_id="1")
+        self.repository.get_event_participants.assert_called_once_with(
+            event_id="1", query=query, offset=offset
+        )
         assert len(participants) > 0
         assert isinstance(participants[0], AttendeeDTO)
 
@@ -43,8 +49,10 @@ class TestGetEventParticipants:
         service = AttendeeService(
             repository=self.repository, event_service=self.event_service
         )
+        query = ""
+        offset = 2
         with raises(EventNotFoundError) as exc:
-            service.get_event_attendees(event_id="1")
+            service.get_event_attendees(event_id="1", query=query, offset=offset)
         self.event_service.check_event_existence.assert_called_once_with(event_id="1")
         self.repository.get_event_participants.assert_not_called()
         assert str(exc.value) == "The given event not exists."
