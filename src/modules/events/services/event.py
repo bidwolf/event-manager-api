@@ -4,7 +4,11 @@ This module is responsible to contain all business logic related to the event.
 
 from abc import ABC, abstractmethod
 
-from src.modules.events.dtos.event import EventDTO, EventRegistrationDTO
+from src.modules.events.dtos.event import (
+    EventDTO,
+    EventDTOWithAmount,
+    EventRegistrationDTO,
+)
 from src.modules.events.entities.event import EventEntity
 
 from src.modules.events.exc.event import (
@@ -22,7 +26,7 @@ class EventServiceInterface(ABC):
         """Create a event"""
 
     @abstractmethod
-    def get_event_data(self, event_id: str) -> EventDTO | None:
+    def get_event_data(self, event_id: str) -> EventDTOWithAmount | None:
         """Retrieve the event data with the given id"""
 
     @abstractmethod
@@ -36,6 +40,10 @@ class EventServiceInterface(ABC):
     @abstractmethod
     def evaluate_event_capacity(self, event_id: str) -> bool:
         """Evaluate if the event with the given id has available vacancies"""
+
+    @abstractmethod
+    def list_events(self, offset: int, query: str) -> list[EventDTO]:
+        """Retrieve the first 10 events ordered by the creation Date"""
 
 
 class EventService(EventServiceInterface):
@@ -67,20 +75,8 @@ class EventService(EventServiceInterface):
             created_at=created_entity.created_at,
         )
 
-    def get_event_data(self, event_id) -> EventDTO | None:
-
-        event_data = self.__repository.get_event_by_id(event_id=event_id)
-        if not event_data:
-            raise EventNotFoundError("Event not found.")
-        return EventDTO(
-            title=event_data.title,
-            details=event_data.details,
-            event_id=event_data.id,
-            slug=event_data.slug,
-            maximum_attendees=event_data.maximum_attendees,
-            created_at=event_data.created_at,
-            attendees_amount=event_data.attendees_amount,
-        )
+    def get_event_data(self, event_id) -> EventDTOWithAmount | None:
+        return self.__repository.get_event_by_id(event_id=event_id)
 
     def check_event_existence(self, event_id):
         return self.__repository.check_event_existence(event_id=event_id)
@@ -92,3 +88,17 @@ class EventService(EventServiceInterface):
         return self.__repository.check_participant_existence(
             attendee_email=attendee_email, event_id=event_id
         )
+
+    def __from_entity_to_dto(self, entity: EventEntity) -> EventDTO:
+        return EventDTO(
+            title=entity.title,
+            details=entity.details,
+            event_id=entity.id,
+            slug=entity.slug,
+            maximum_attendees=entity.maximum_attendees,
+            created_at=entity.created_at,
+        )
+
+    def list_events(self, offset, query):
+        event_list = self.__repository.load_events_list(offset=offset, query=query)
+        return [self.__from_entity_to_dto(event) for event in event_list]

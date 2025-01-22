@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 from src.drivers.database.types import ConnectionInterface
 from src.modules.events.dao.event import EventDAO
 from src.modules.events.dtos.event import EventDTOWithAmount
-from src.modules.events.entities.event import EventEntity
 
 
 class TestEventInfo:
