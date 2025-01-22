@@ -240,14 +240,9 @@ class TestAttendeeController:
         controller = AttendeeController(service=self.service)
         request = HttpRequest(body=None, params={"attendee_id": "267"})
         service_response = EventCredentialsDTO(
-            event_details="nothing special.",
-            event_id="asjkda",
-            event_slug="askldlasd",
             event_title="asjdnasd",
-            participant_email="henrique@gmail.com",
-            participant_id="asjdasd",
-            participant_name="asdjaosd",
-            registered_at=datetime.now(),
+            email="henrique@gmail.com",
+            name="asdjaosd",
         )
         self.service.get_attendee_event_credential.return_value = service_response
         response = controller.get_attendee_badge(request=request)

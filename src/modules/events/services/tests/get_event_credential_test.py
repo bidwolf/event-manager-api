@@ -87,4 +87,4 @@ class TestEventCredential:
         self.event_service.get_event_data.assert_called_once_with(
             event_id=mocked_attendee_data.event_id
         )
-        assert credential.event_details == mocked_event_data.details
+        assert credential.event_title == mocked_event_data.title

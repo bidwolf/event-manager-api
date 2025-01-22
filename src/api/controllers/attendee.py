@@ -36,14 +36,23 @@ class AttendeeController(AttendeeControllerInterface):
                 and isinstance(request.params["attendee_id"], str)
             ):
                 raise TypeError("You provided an invalid attendee id.")
-            data = self.__service.get_attendee_event_credential(
-                attendee_id=request.params["attendee_id"]
-            )
+            attendee_id = request.params["attendee_id"]
+            data = self.__service.get_attendee_event_credential(attendee_id=attendee_id)
             if not data:
                 raise AttendeeNotFoundError(
                     "Cannot find the attendee badge for this attendee."
                 )
-            response_payload = {"badge_data": data}
+            qrcode_url = None
+            if request.options and request.options.get("base_url"):
+                qrcode_url = f"{request.options.get("base_url")}/{attendee_id}/check-in"
+            response_payload = {
+                "badge_data": {
+                    "name": data.name,
+                    "email": data.email,
+                    "event_title": data.event_title,
+                    "qrcode_url": qrcode_url,
+                }
+            }
             return HttpResponse(payload=response_payload, status=HTTPStatus.OK)
 
         except Exception as exc:

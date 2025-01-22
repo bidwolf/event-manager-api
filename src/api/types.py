@@ -6,6 +6,7 @@ from http import HTTPStatus
 class HttpRequest:
     body: dict | None
     params: dict | None = None
+    options: dict | None = None
 
 
 @dataclass

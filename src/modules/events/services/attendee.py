@@ -133,14 +133,8 @@ class AttendeeService(AttendeeServiceInterface):
         event_data = self.__event_service.get_event_data(event_id=attendee.event_id)
         if event_data is None:
             raise EventNotFoundError("The registered event was not found.")
-        # TODO : Add due date and end date to each event
         return EventCredentialsDTO(
-            event_details=event_data.details,
-            event_id=event_data.event_id,
             event_title=event_data.title,
-            event_slug=event_data.slug,
-            participant_email=attendee.email,
-            participant_name=attendee.name,
-            participant_id=attendee.id,
-            registered_at=attendee.created_at,
+            email=attendee.email,
+            name=attendee.name,
         )

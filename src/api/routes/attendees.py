@@ -45,10 +45,14 @@ def get_participants(event_id):
         return (jsonify(response.payload), response.status)
 
 
-@attendee_blueprint.route("/events/<attendee_id>/badge", methods=[HTTPMethod.GET])
+@attendee_blueprint.route("/attendees/<attendee_id>/badge", methods=[HTTPMethod.GET])
 def get_badge(attendee_id):
     try:
-        data_request = HttpRequest(body=None, params={"attendee_id": attendee_id})
+        data_request = HttpRequest(
+            body=None,
+            params={"attendee_id": attendee_id},
+            options={"base_url": f"{request.host_url}/attendees"},
+        )
         response = attendee_controller.get_attendee_badge(request=data_request)
         return (jsonify(response.payload), response.status)
 
