@@ -9,7 +9,7 @@ attendee_blueprint = Blueprint("attendee", __name__)
 attendee_controller = attendee_composer()
 
 
-@attendee_blueprint.route("/events/<event_id>/register", methods=[HTTPMethod.POST])
+@attendee_blueprint.route("/events/<event_id>/attendee", methods=[HTTPMethod.POST])
 def create_attendee(event_id):
     try:
         data_json = request.get_json()
