@@ -22,6 +22,7 @@ class EventDTO:
     created_at: datetime
     details: str | None = None
     maximum_attendees: int | None = None
+    attendees_amount: int = 0
 
 
 @dataclass

@@ -79,6 +79,7 @@ class EventService(EventServiceInterface):
             slug=event_data.slug,
             maximum_attendees=event_data.maximum_attendees,
             created_at=event_data.created_at,
+            attendees_amount=event_data.attendees_amount,
         )
 
     def check_event_existence(self, event_id):

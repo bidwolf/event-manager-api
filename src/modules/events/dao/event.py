@@ -47,13 +47,26 @@ class EventDAO(EventDaoInterface):
             slug=row[3],
             maximum_attendees=row[4],
             created_at=row[5],
+            attendees_amount=row[6],
         )
 
     def get_event_info(self, event_id) -> EventEntity | None:
         engine = self.__connection.get_engine()
         with engine.connect() as connection:
             result = connection.execute(
-                text("SELECT * FROM events WHERE id =:id LIMIT 1"), {"id": event_id}
+                text(
+                    """
+                    SELECT
+                    ev.*,
+                    COUNT(at.id) AS attendees_amount
+                    FROM attendees AS at
+                    LEFT JOIN events AS ev
+                    ON at.event_id = ev.id
+                    WHERE ev.id = '9c6457ae-27ce-4172-bfcf-a349949b3ac6'
+                    GROUP BY ev.id
+                     """
+                ),
+                {"id": event_id},
             )
             row = result.first()
             if row is None:

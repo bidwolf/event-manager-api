@@ -39,6 +39,7 @@ class TestEventInfo:
                 "slug",
                 0,  # maximum attendees row
                 datetime(2024, 1, 1),  # created_at
+                0,
             )
             db_connection.execute.return_value.first.return_value = row
             result = dao.get_event_info(event_id=event_id)
@@ -70,6 +71,7 @@ class TestEventInfo:
                     "slug",
                     0,  # maximum attendees row
                     datetime(2024, 1, 1),  # created_at
+                    1,
                 )
             ]
             db_connection.execute.return_value.fetchall.return_value = rows
