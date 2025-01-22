@@ -16,6 +16,10 @@ class EventControllerInterface(ABC):
     def get_event(self, request: HttpRequest) -> HttpResponse:
         raise NotImplementedError
 
+    @abstractmethod
+    def get_events(self, request: HttpRequest) -> HttpResponse:
+        raise NotImplementedError
+
 
 class EventController(EventControllerInterface):
     def __init__(self, service: EventServiceInterface):
@@ -57,5 +61,24 @@ class EventController(EventControllerInterface):
                 raise EventNotFoundError("Event not found.")
             response_payload = {"event": event_found}
             return HttpResponse(payload=response_payload, status=HTTPStatus.OK)
+        except Exception as exc:
+            raise map_exception_to_http_response(exc=exc) from exc
+
+    def get_events(self, request):
+        try:
+            page_offset = 0
+            query = ""
+            if request.params:
+                if str(request.params.get("page_offset", "0")).isdigit():
+                    page_offset = int(request.params.get("page_offset", "0"))
+                query = str(request.params.get("query", ""))
+            events = self.__service.list_events(offset=page_offset, query=query)
+            response_payload = {
+                "events": events,
+                "page_offset": page_offset,
+                "quantity": len(events),
+            }
+            return HttpResponse(payload=response_payload, status=HTTPStatus.OK)
+
         except Exception as exc:
             raise map_exception_to_http_response(exc=exc) from exc
