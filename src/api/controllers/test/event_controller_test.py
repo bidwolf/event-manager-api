@@ -6,7 +6,11 @@ from pytest import raises
 
 from src.api.controllers.event import EventController
 from src.api.types import HttpRequest
-from src.modules.events.dtos.event import EventDTO, EventRegistrationDTO
+from src.modules.events.dtos.event import (
+    EventDTO,
+    EventDTOWithAmount,
+    EventRegistrationDTO,
+)
 from src.modules.events.exc.http import (
     HttpResponseError,
 )
@@ -60,13 +64,14 @@ class TestEventController:
     def test_get_event(self):
         controller = EventController(service=self.service)
         request = HttpRequest(body=None, params={"event_id": "333"})
-        event_response = EventDTO(
+        event_response = EventDTOWithAmount(
             created_at=datetime.now(),
             details="anything",
             event_id=request.params["event_id"],
             maximum_attendees=None,
             slug="any-slug",
             title="any title",
+            attendee_amount=2,
         )
         self.service.get_event_data.return_value = event_response
 
@@ -77,6 +82,107 @@ class TestEventController:
 
         assert result.status == HTTPStatus.OK
         assert result.payload["event"] == event_response
+
+    def test_get_event_list_without_params(self):
+        controller = EventController(service=self.service)
+        request = HttpRequest(body=None)
+        event_response = [
+            EventDTOWithAmount(
+                created_at=datetime.now(),
+                details="anything",
+                event_id="anything too",
+                maximum_attendees=None,
+                slug="any-slug",
+                title="any title",
+                attendee_amount=2,
+            )
+        ]
+        self.service.list_events.return_value = event_response
+
+        result = controller.get_events(request=request)
+        self.service.list_events.assert_called_with(offset=0, query="")
+
+        assert result.status == HTTPStatus.OK
+        assert result.payload["events"] == event_response
+
+    def test_get_event_list_with_query(self):
+        controller = EventController(service=self.service)
+        request = HttpRequest(body=None, params={"query": "any"})
+        event_response = [
+            EventDTOWithAmount(
+                created_at=datetime.now(),
+                details="anything",
+                event_id="anything too",
+                maximum_attendees=None,
+                slug="any-slug",
+                title="any title",
+                attendee_amount=2,
+            )
+        ]
+        self.service.list_events.return_value = event_response
+
+        result = controller.get_events(request=request)
+        self.service.list_events.assert_called_with(
+            offset=0, query=request.params["query"]
+        )
+
+        assert result.status == HTTPStatus.OK
+        assert result.payload["events"] == event_response
+
+    def test_get_event_list_with_offset(self):
+        controller = EventController(service=self.service)
+        request = HttpRequest(body=None, params={"page_offset": "2"})
+        event_response = [
+            EventDTOWithAmount(
+                created_at=datetime.now(),
+                details="anything",
+                event_id="anything too",
+                maximum_attendees=None,
+                slug="any-slug",
+                title="any title",
+                attendee_amount=2,
+            )
+        ]
+        self.service.list_events.return_value = event_response
+
+        result = controller.get_events(request=request)
+        self.service.list_events.assert_called_with(offset=2, query="")
+
+        assert result.status == HTTPStatus.OK
+        assert result.payload["events"] == event_response
+
+    def test_get_event_list_with_invalid_offset(self):
+        controller = EventController(service=self.service)
+        request = HttpRequest(body=None, params={"page_offset": "-2"})
+        event_response = [
+            EventDTOWithAmount(
+                created_at=datetime.now(),
+                details="anything",
+                event_id="anything too",
+                maximum_attendees=None,
+                slug="any-slug",
+                title="any title",
+                attendee_amount=2,
+            )
+        ]
+        self.service.list_events.return_value = event_response
+
+        result = controller.get_events(request=request)
+        self.service.list_events.assert_called_with(offset=0, query="")
+
+        assert result.status == HTTPStatus.OK
+        assert result.payload["events"] == event_response
+
+    def test_get_event_list_goes_wrong(self):
+        controller = EventController(service=self.service)
+        request = HttpRequest(body=None, params={"page_offset": "-2"})
+        self.service.list_events.side_effect = Exception("any")
+        with raises(HttpResponseError) as exc:
+            controller.get_events(request=request)
+        self.service.list_events.assert_called_with(offset=0, query="")
+
+        assert exc.value.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert exc.value.details == "any"
 
     def test_register_event_not_created(self):
         controller = EventController(service=self.service)
