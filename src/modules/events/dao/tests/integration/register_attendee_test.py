@@ -20,7 +20,6 @@ def test_register_attendee(connection):
     )
     result = dao.register_participant(attendee=new_attendee)
     assert result is not None
-    print(result.id)
     with pytest.raises(AttendeeAlreadyExistsError) as exc:
         dao.register_participant(attendee=new_attendee)
     assert (

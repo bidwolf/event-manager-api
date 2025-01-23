@@ -103,7 +103,6 @@ class EventDAO(EventDaoInterface):
                 connection.commit()
                 return event_data
             except IntegrityError as exc:
-                print(exc)
                 raise EventAlreadyExistsError(
                     "An event with this slug already exists."
                 ) from exc

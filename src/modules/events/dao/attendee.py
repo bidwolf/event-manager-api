@@ -64,7 +64,6 @@ class AttendeeDAO(AttendeeDaoInterface):
             return self.__row_to_entity(row=row)
 
     def get_event_participants(self, event_id, query="", offset=0):
-        print(query, offset)
         engine = self.__connection.get_engine()
         with engine.connect() as connection:
             get_attendee_data_sql = text(

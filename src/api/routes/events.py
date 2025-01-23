@@ -34,7 +34,6 @@ def get_event_routes():
                 "query": request.args.get("query", "", type=str),
             },
         )
-        print(data_request.params)
         response = event_controller.get_events(request=data_request)
         return (jsonify(response.payload), response.status)
 
