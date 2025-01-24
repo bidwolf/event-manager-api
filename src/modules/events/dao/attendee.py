@@ -24,6 +24,10 @@ class AttendeeDaoInterface(ABC):
     def get_attendee_data(self, attendee_id: str) -> AttendeeEntity | None:
         """Retrieve data related to the given attendee id"""
 
+    @abstractmethod
+    def count_event_participants(self, event_id: str, query: str) -> int:
+        """Count all registered participants in the given event id"""
+
 
 class AttendeeDAO(AttendeeDaoInterface):
     def __init__(self, connection: ConnectionInterface):
@@ -62,6 +66,24 @@ class AttendeeDAO(AttendeeDaoInterface):
             if row is None:
                 return None
             return self.__row_to_entity(row=row)
+
+    def count_event_participants(self, event_id: str, query: str) -> int:
+        engine = self.__connection.get_engine()
+        with engine.connect() as connection:
+            count_attendees_query = text(
+                """
+                SELECT COUNT(*)
+                FROM attendees AS at
+                WHERE at.event_id = :id
+                AND at.name LIKE :query
+            """
+            )
+            result = connection.execute(
+                count_attendees_query,
+                {"id": event_id, "query": f"%{query}%"},
+            )
+            all_rows = result.scalar()
+            return int(all_rows) if all_rows is not None else 0
 
     def get_event_participants(self, event_id, query="", offset=0):
         engine = self.__connection.get_engine()

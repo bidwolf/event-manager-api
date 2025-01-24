@@ -18,6 +18,10 @@ class AttendeeRepositoryInterface(ABC):
     def get_attendee_by_id(self, attendee_id: str) -> AttendeeEntity | None:
         """Retrieve the data of the given attendee_id"""
 
+    @abstractmethod
+    def get_total_event_participants(self, event_id: str, query: str) -> int:
+        """Retrive the count of participants in the given event"""
+
 
 class AttendeeRepository(AttendeeRepositoryInterface):
     def __init__(self, dao: AttendeeDaoInterface):
@@ -33,3 +37,6 @@ class AttendeeRepository(AttendeeRepositoryInterface):
 
     def get_attendee_by_id(self, attendee_id):
         return self.__dao.get_attendee_data(attendee_id=attendee_id)
+
+    def get_total_event_participants(self, event_id: str, query: str) -> int:
+        return self.__dao.count_event_participants(event_id=event_id, query=query)

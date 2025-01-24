@@ -36,6 +36,10 @@ class AttendeeServiceInterface(ABC):
     ) -> EventCredentialsDTO | None:
         """Retrieve the event credential for the given attendee"""
 
+    @abstractmethod
+    def get_total_attendees_in_event(self, event_id: str, query: str) -> int:
+        """Retrieve the count of total participants in a given event"""
+
 
 class AttendeeService(AttendeeServiceInterface):
     def __init__(
@@ -138,3 +142,9 @@ class AttendeeService(AttendeeServiceInterface):
             email=attendee.email,
             name=attendee.name,
         )
+
+    def get_total_attendees_in_event(self, event_id: str, query: str) -> int:
+        total = self.__repository.get_total_event_participants(
+            event_id=event_id, query=query
+        )
+        return total
