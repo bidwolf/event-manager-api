@@ -267,7 +267,9 @@ class TestAttendeeController:
         )
         assert response.payload["badge_data"] == {
             "name": service_response.name,
-            "qrcode_url": f"{request.options["base_url"]}/{request.params["attendee_id"]}/check-in",
+            "qrcode_url": (
+                f"{request.options["base_url"]}/{request.params["attendee_id"]}/check-in"
+            ),
             "email": service_response.email,
             "event_title": service_response.event_title,
         }
