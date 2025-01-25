@@ -136,6 +136,7 @@ class TestAttendeeController:
         with raises(HttpResponseError) as exc:
             controller.get_event_participants(request=request)
         self.service.register_attendee_in_event.assert_not_called()
+        self.service.get_total_attendees_in_event.assert_not_called()
         assert exc.value.status == HTTPStatus.BAD_REQUEST
         assert exc.value.details == "You provided an invalid event id."
 
@@ -145,6 +146,8 @@ class TestAttendeeController:
         with raises(HttpResponseError) as exc:
             controller.get_event_participants(request=request)
         self.service.register_attendee_in_event.assert_not_called()
+        self.service.get_total_attendees_in_event.assert_not_called()
+
         assert exc.value.status == HTTPStatus.BAD_REQUEST
         assert exc.value.details == "You provided an invalid event id."
 
@@ -154,6 +157,7 @@ class TestAttendeeController:
         with raises(HttpResponseError) as exc:
             controller.get_event_participants(request=request)
         self.service.register_attendee_in_event.assert_not_called()
+        self.service.get_total_attendees_in_event.assert_not_called()
         assert exc.value.status == HTTPStatus.BAD_REQUEST
         assert exc.value.details == "You provided an invalid event id."
 
@@ -163,7 +167,11 @@ class TestAttendeeController:
             body=None, params={"event_id": "267", "page_offset": 0, "query": ""}
         )
         self.service.get_event_attendees.return_value = None
+        self.service.get_total_attendees_in_event.return_value = 0
         response = controller.get_event_participants(request=request)
+        self.service.get_total_attendees_in_event.assert_called_with(
+            event_id=request.params["event_id"], query=""
+        )
         self.service.get_event_attendees.assert_called_with(
             event_id=request.params["event_id"],
             offset=request.params["page_offset"],
@@ -187,7 +195,11 @@ class TestAttendeeController:
             )
         ]
         self.service.get_event_attendees.return_value = attendees
+        self.service.get_total_attendees_in_event.return_value = 1
         response = controller.get_event_participants(request=request)
+        self.service.get_total_attendees_in_event.assert_called_with(
+            event_id=request.params["event_id"], query=""
+        )
         self.service.get_event_attendees.assert_called_with(
             event_id=request.params["event_id"],
             offset=0,
@@ -238,6 +250,31 @@ class TestAttendeeController:
 
     def test_get_attendee_badge(self):
         controller = AttendeeController(service=self.service)
+        request = HttpRequest(
+            body=None,
+            params={"attendee_id": "267"},
+            options={"base_url": "test://events"},
+        )
+        service_response = EventCredentialsDTO(
+            event_title="asjdnasd",
+            email="henrique@gmail.com",
+            name="asdjaosd",
+        )
+        self.service.get_attendee_event_credential.return_value = service_response
+        response = controller.get_attendee_badge(request=request)
+        self.service.get_attendee_event_credential.assert_called_with(
+            attendee_id=request.params["attendee_id"]
+        )
+        assert response.payload["badge_data"] == {
+            "name": service_response.name,
+            "qrcode_url": f"{request.options["base_url"]}/{request.params["attendee_id"]}/check-in",
+            "email": service_response.email,
+            "event_title": service_response.event_title,
+        }
+        assert response.status == HTTPStatus.OK
+
+    def test_get_attendee_badge_without_qrcode_url(self):
+        controller = AttendeeController(service=self.service)
         request = HttpRequest(body=None, params={"attendee_id": "267"})
         service_response = EventCredentialsDTO(
             event_title="asjdnasd",
@@ -249,5 +286,10 @@ class TestAttendeeController:
         self.service.get_attendee_event_credential.assert_called_with(
             attendee_id=request.params["attendee_id"]
         )
-        assert response.payload["badge_data"] == service_response
+        assert response.payload["badge_data"] == {
+            "name": service_response.name,
+            "qrcode_url": None,
+            "email": service_response.email,
+            "event_title": service_response.event_title,
+        }
         assert response.status == HTTPStatus.OK

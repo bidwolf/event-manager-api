@@ -62,14 +62,14 @@ class AttendeeController(AttendeeControllerInterface):
         try:
             if not (
                 request.params
-                and request.params["event_id"]
-                and isinstance(request.params["event_id"], str)
+                and request.params.get("event_id", None)
+                and isinstance(request.params.get("event_id", None), str)
             ):
                 raise TypeError("You provided an invalid event id.")
             query = request.params.get("query", "")
-            event_id = request.params["event_id"]
+            event_id = request.params.get("event_id", None)
             offset = 0
-            if str(request.params.get("page_offset", "0")).isnumeric():
+            if str(request.params.get("page_offset", None)).isnumeric():
                 offset = int(request.params.get("page_offset"))
             total = self.__service.get_total_attendees_in_event(
                 event_id=event_id, query=query
